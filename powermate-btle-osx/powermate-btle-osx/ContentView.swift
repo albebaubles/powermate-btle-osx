@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct ContentView: View {
+  @AppStorage("lineCount")
+  private var lineCount = 1
 
   @AppStorage("swapDirection")
   private var swapDirection: Bool = false
@@ -39,19 +41,17 @@ struct ContentView: View {
           Toggle(isOn: $swapDirection) {
             Text("Swap Direction")
           }
+          Picker("Line count", selection: $lineCount) {
+            ForEach(1...10, id: \.self) { i in
+
+              Text("\(i)").tag(i)
+
+            }
+
+          }
         }
         .padding()
       }
-
-      HStack {
-
-        Button(action: {
-          NSApplication.shared.terminate(nil)
-        }) {
-          Text("Quit")
-        }
-      }
-      .padding()
     }
   }
 }

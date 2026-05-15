@@ -9,22 +9,20 @@ import SwiftUI
 
 @main
 struct powermate_btle_osxApp: App {
-  @State private var isActive = false
-  let driver = PowermateControllerDriver()
-  init() {
-    driver.setLedOn()
-  }
+  @StateObject var driver = PowermateControllerDriver()
 
     var body: some Scene {
       MenuBarExtra {
         MenuBarExtraView()
+          .environmentObject(driver)
       } label: {
-        Image(isActive ? "record.circle.fill.blue" : "record.circle.fill.red")
+        Image(driver.isActive ? "record.circle.fill.blue" : "record.circle.fill.red")
           .symbolEffect(.rotate)
       }
 
       Window("Powermate Controller", id: "main") {
         ContentView()
+          .environmentObject(driver)
           .frame(minWidth: 350,
                  idealWidth: 350,
                  maxWidth: 350,
@@ -39,6 +37,8 @@ struct powermate_btle_osxApp: App {
 
 struct MenuBarExtraView: View {
     @Environment(\.openWindow) var openWindow
+    @EnvironmentObject var driver: PowermateControllerDriver
+
     var body: some View {
         Button("Powermate...") {
             openWindow(id: "main")

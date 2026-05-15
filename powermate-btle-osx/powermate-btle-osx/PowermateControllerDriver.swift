@@ -5,30 +5,35 @@
 //  Created by Al Corbett on 5/15/26.
 //
 
-
 import Foundation
 import CoreBluetooth
 import ApplicationServices
 import AVKit
 import SwiftUI
+import Combine
 
+/// Internal constants used throughout PowermateControllerDriver.
+private struct PowermateConstants {
+    /// BLE Service UUID for Powermate
+    static let serviceUUID = "25598CF7-4240-40A6-9910-080F19F91EBC"
+    /// BLE Read Characteristic UUID
+  static let readCharacteristicUUID = "9cf53570-ddd9-47f3-ba63-09acefc60415".uppercased()
+    /// BLE LED Characteristic UUID
+  static let ledCharacteristicUUID = "847d189e-86ee-4bd2-966f-800832b1259d".uppercased()
 
-// MARK: - Constants
+    /// Notification name for knob events
+    static let knobNotification = "powermateKnobNotification"
+    /// Notification name for LED events
+    static let ledNotification = "powermateLEDNotification"
 
-let kPowermateServiceUUID = "25598CF7-4240-40A6-9910-080F19F91EBC".uppercased()
-let kPowermateReadCharacteristicUUID = "9cf53570-ddd9-47f3-ba63-09acefc60415".uppercased()
-let kPowermateLedCharacteristicUUID = "847d189e-86ee-4bd2-966f-800832b1259d".uppercased()
+    /// LED command keys
+    static let ledOn = "powermateLEDOn"
+    static let ledOff = "powermateLEDOff"
+    static let ledFlash = "powermateLEDFlash"
+    static let ledLevel = "powermateLEDLevel"
+}
 
-let kPowermateKnobNotification = "kPowermateKnobNotification"
-let kPowermateLEDNotification = "kPowermateLEDNotification"
-
-let kPowermateLEDOn = "kPowermateLEDOn"
-let kPowermateLEDOff = "kPowermateLEDOff"
-let kPowermateLEDFlash = "kPowermateLEDFlash"
-let kPowermateLEDLevel = "kPowermateLEDLevel"
-
-// MARK: - Input States
-
+/// The set of input states reported by the Powermate device.
 enum PowermateInputState: UInt8 {
     case press = 0x65
     case release = 0x66
@@ -52,8 +57,10 @@ protocol PowermateControllerDelegate: AnyObject {
 
 // MARK: - Driver
 
-final class PowermateControllerDriver: NSObject {
+final class PowermateControllerDriver: NSObject, ObservableObject {
+  @Published var isActive: Bool = false
   @AppStorage("swapDirection") var swapDirection: Bool = false
+  @AppStorage("lineCount") var lineCount: Int = 1
 
     // MARK: BLE
     private var manager: CBCentralManager!
@@ -78,7 +85,7 @@ final class PowermateControllerDriver: NSObject {
       DistributedNotificationCenter.default().addObserver(
             self,
             selector: #selector(ledNotificationObserver(_:)),
-            name: NSNotification.Name(kPowermateLEDNotification),
+            name: NSNotification.Name(PowermateConstants.ledNotification),
             object: nil
         )
     }
@@ -90,10 +97,9 @@ final class PowermateControllerDriver: NSObject {
         DistributedNotificationCenter.default().removeObserver(self)
     }
 
-    // MARK: UUID helpers
-
+      // MARK: UUID helpers
     static var serviceUUID: CBUUID {
-        CBUUID(string: kPowermateServiceUUID)
+        CBUUID(string: PowermateConstants.serviceUUID)
     }
 
     static func name(for state: PowermateInputState) -> String {
@@ -120,7 +126,7 @@ final class PowermateControllerDriver: NSObject {
         if let state = PowermateInputState(rawValue: value) {
             let name = Self.name(for: state)
             DistributedNotificationCenter.default().post(
-                name: NSNotification.Name(kPowermateKnobNotification),
+                name: NSNotification.Name(PowermateConstants.knobNotification),
                 object: name
             )
         }
@@ -136,13 +142,13 @@ final class PowermateControllerDriver: NSObject {
 
         switch function {
 
-        case kPowermateLEDOn:
+        case PowermateConstants.ledOn:
             setLedOn()
 
-        case kPowermateLEDOff:
+        case PowermateConstants.ledOff:
             setLedOff()
 
-        case kPowermateLEDFlash:
+        case PowermateConstants.ledFlash:
             let level = message["level"] as? Int ?? 0
             if level == 32 {
                 quickBlinkLed()
@@ -150,7 +156,7 @@ final class PowermateControllerDriver: NSObject {
                 blinkLed(atSpeed: level)
             }
 
-        case kPowermateLEDLevel:
+        case PowermateConstants.ledLevel:
             let level = message["level"] as? Float ?? 0
             setLedBrightness(level)
 
@@ -226,8 +232,8 @@ extension PowermateControllerDriver: CBPeripheralDelegate {
         for service in services where service.uuid == Self.serviceUUID {
             peripheral.discoverCharacteristics(
               [
-              CBUUID(string: kPowermateReadCharacteristicUUID),
-              CBUUID(string: kPowermateLedCharacteristicUUID)],
+              CBUUID(string: PowermateConstants.readCharacteristicUUID),
+              CBUUID(string: PowermateConstants.ledCharacteristicUUID)],
                                                for: service)
         }
     }
@@ -240,9 +246,12 @@ extension PowermateControllerDriver: CBPeripheralDelegate {
 
         for char in chars {
           let uuidString = char.uuid.uuidString.uppercased()
-          if uuidString == kPowermateReadCharacteristicUUID{
+          print("string: \(uuidString)")
+          if uuidString == PowermateConstants.readCharacteristicUUID {
+            print("ecog: \(uuidString)")
                 peripheral.setNotifyValue(true, for: char)
-          } else if uuidString == kPowermateLedCharacteristicUUID {
+          } else if uuidString == PowermateConstants.ledCharacteristicUUID {
+            print("recog: \(uuidString)")
                 writeCharacteristic = char
                 setLedOff()
             } else {
@@ -263,9 +272,9 @@ extension PowermateControllerDriver: CBPeripheralDelegate {
 
         // legacy scroll behavior
         if value == UInt8(ascii: "g") {
-          postScroll(delta: swapDirection ?  -1 : 1)
+          postScroll(delta: Int32(swapDirection ?  lineCount * -1 : lineCount))
         } else if value == UInt8(ascii: "h") {
-          postScroll(delta: swapDirection ?  1 : -1)
+          postScroll(delta: Int32(swapDirection ?  lineCount : lineCount * -1))
         }
     }
 }
@@ -318,6 +327,7 @@ extension PowermateControllerDriver: CBCentralManagerDelegate {
 
         peripheral.discoverServices([Self.serviceUUID])
         central.stopScan()
+        isActive = true
     }
 
     func centralManager(_ central: CBCentralManager,
@@ -326,5 +336,7 @@ extension PowermateControllerDriver: CBCentralManagerDelegate {
 
         updateConnectionState(false)
         startScan()
+      isActive = false
     }
 }
+
