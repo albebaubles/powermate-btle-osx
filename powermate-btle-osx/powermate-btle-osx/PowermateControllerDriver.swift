@@ -310,13 +310,14 @@ extension PowermateControllerDriver: CBPeripheralDelegate {
 
         process(value)
 
-        if value == UInt8(ascii: "g") {
+
+      if value == PowermateInputState.cw.rawValue {
           // scroll clockwise
             postScroll(delta: Int32(swapDirection ? lineCount * -1 : lineCount))
-        } else if value == UInt8(ascii: "h") {
+        } else if value == PowermateInputState.ccw.rawValue {
           // scroll counter clockwise
             postScroll(delta: Int32(swapDirection ? lineCount : lineCount * -1))
-        } else if value == UInt8(ascii: "e") {
+        } else if value == PowermateInputState.press.rawValue {
           // mouse button down
           postClick()
         }
