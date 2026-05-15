@@ -30,7 +30,13 @@ A modern macOS driver and controller for the Bluetooth Low Energy (BTLE) Griffin
 - **Line Count:** Select from 1–10 lines per step.
 
 ## Screenshots
-<img src="./screenshot.png" width="300" />
+### Config
+<img src="./screenshot.png" width="300" /><br>
+### Bluetooth Access
+<img src="./bluetooth.png" width="300" /><br>
+
+### Accessibility Access
+<img src="./accessibility.png" width="300" />
 
 ## Project Structure
 - `PowermateControllerDriver.swift`: Core device communication and event processing
