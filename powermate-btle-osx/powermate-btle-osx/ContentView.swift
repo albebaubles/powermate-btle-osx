@@ -24,7 +24,7 @@ struct ContentView: View {
             .scaledToFit()
             .frame(width: 50, height: 50)
 
-          Text("Powermate")
+          Text("PowerMate")
             .font(.title)
 
           Text("BTLE Driver")
