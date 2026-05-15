@@ -41,6 +41,13 @@ A modern macOS driver and controller for the Bluetooth Low Energy (BTLE) Griffin
 - Inspired by the original Griffin Powermate software
 - Built with Apple's CoreBluetooth, SwiftUI, and Combine frameworks
 
+This project was inspired in part by the excellent
+[cedstrom/powermate-osx](https://github.com/cedstrom/powermate-osx)
+project by Chris Edström.
+
+Some concepts and implementation ideas were derived from that project,
+which is licensed under the GNU GPL v3.
+
 ## License
 
 This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
