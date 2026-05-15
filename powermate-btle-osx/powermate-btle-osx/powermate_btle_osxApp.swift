@@ -16,7 +16,7 @@ struct powermate_btle_osxApp: App {
         MenuBarExtraView()
           .environmentObject(driver)
       } label: {
-        Image(driver.isActive ? "record.circle.fill.blue" : "record.circle.fill.red")
+        Image(driver.connected ? "record.circle.fill.blue" : "record.circle.fill.red")
           .symbolEffect(.rotate)
       }
 
