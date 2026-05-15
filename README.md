@@ -34,7 +34,6 @@ A modern macOS driver and controller for the Bluetooth Low Energy (BTLE) Griffin
 <img src="./screenshot.png" width="300" /><br>
 ### Bluetooth Access
 <img src="./bluetooth.png" width="300" /><br>
-
 ### Accessibility Access
 <img src="./accessibility.png" width="300" />
 
