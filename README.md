@@ -50,6 +50,8 @@ This project was inspired in part by the excellent
 [cedstrom/powermate-osx](https://github.com/cedstrom/powermate-osx)
 project by Chris Edström.
 
+There is more thorough driver for the USB Powermate at: [jameslockman/Griffin-PowerMate-Driver](https://github.com/jameslockman/Griffin-PowerMate-Driver)
+
 Some concepts and implementation ideas were derived from that project,
 which is licensed under the GNU GPL v3.
 
